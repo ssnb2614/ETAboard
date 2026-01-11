@@ -655,6 +655,49 @@
             });
         }
 
+        // --- EXPORT TO CSV LOGIC (NEW) ---
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            if (rawData.length === 0) { alert("NO DATA TO EXPORT"); return; }
+            
+            // 1. 定義 CSV 標頭
+            let csvContent = "職稱,姓名,交通方式,日期,預計時間,狀態,備註(無法返回原因)\n";
+
+            // 2. 轉換資料
+            rawData.forEach(row => {
+                // 狀態中文化
+                let statusTw = "出勤中";
+                if(row.status === 'returned') statusTw = "已歸隊";
+                if(row.status === 'on_duty') statusTw = "任務結束(已確認)";
+                if(row.cannotReturn) statusTw = "無法返回";
+
+                // 處理欄位內容 (避免逗號破壞 CSV 格式)
+                const rank = `"${row.rank || ''}"`;
+                const name = `"${row.name || ''}"`;
+                const transport = `"${row.transport || ''}"`;
+                const date = `"${row.etaDate || ''}"`;
+                const time = `"${row.eta || ''}"`;
+                const status = `"${statusTw}"`;
+                const reason = `"${row.reason || ''}"`;
+
+                csvContent += `${rank},${name},${transport},${date},${time},${status},${reason}\n`;
+            });
+
+            // 3. 建立下載連結 (加入 BOM \uFEFF 解決 Excel 中文亂碼)
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            // 檔名加上時間戳記
+            const now = new Date();
+            const timeStr = now.toISOString().split('T')[0];
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Flight_Log_${timeStr}.csv`);
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });        
+        
         // --- Purge Logic ---
         const modal = document.getElementById('purgeModal');
         const openModalBtn = document.getElementById('openPurgeModal');
@@ -689,3 +732,4 @@
 </body>
 
 </html>
+
