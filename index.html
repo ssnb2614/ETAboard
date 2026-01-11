@@ -84,7 +84,7 @@
         /* Form & Inputs */
         .form-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; }
         .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; grid-column: span 2; }
-        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; grid-column: span 2; } /* New layout for Date/Time */
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; grid-column: span 2; }
         .input-group { margin-bottom: 10px; }
         .full-width { grid-column: span 2; }
         
@@ -96,8 +96,7 @@
         }
         input:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 8px var(--primary-color); }
         input:disabled { opacity: 0.3; cursor: not-allowed; border-color: #333; }
-
-        /* Date Input Specifics */
+        
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1) sepia(1) saturate(5) hue-rotate(175deg); /* Cyan tint */
             cursor: pointer;
@@ -112,26 +111,18 @@
 
         /* Buttons */
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        
         button.submit-btn {
             flex-grow: 1; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary-color);
             color: var(--primary-color); padding: 12px; font-size: 1.1rem; cursor: pointer;
             text-transform: uppercase; transition: 0.2s;
         }
         button.submit-btn:hover { background: var(--primary-color); color: #000; box-shadow: 0 0 15px var(--primary-color); }
-        
-        /* Edit Mode Styles */
-        button.submit-btn.edit-mode {
-            border-color: var(--warning-color); color: var(--warning-color); background: rgba(255, 204, 0, 0.1);
-        }
-        button.submit-btn.edit-mode:hover {
-            background: var(--warning-color); color: #000; box-shadow: 0 0 15px var(--warning-color);
-        }
-
+        button.submit-btn.edit-mode { border-color: var(--warning-color); color: var(--warning-color); background: rgba(255, 204, 0, 0.1); }
+        button.submit-btn.edit-mode:hover { background: var(--warning-color); color: #000; box-shadow: 0 0 15px var(--warning-color); }
         button.cancel-btn {
             width: 30%; background: rgba(50, 50, 50, 0.5); border: 1px solid #666;
             color: #aaa; padding: 12px; font-size: 1rem; cursor: pointer;
-            text-transform: uppercase; transition: 0.2s; display: none; /* Hidden by default */
+            text-transform: uppercase; transition: 0.2s; display: none;
         }
         button.cancel-btn:hover { background: #666; color: #fff; }
 
@@ -153,7 +144,6 @@
         .tab-btn[data-target="overdue"].active { border-color: var(--warn-color); background: rgba(255,0,0,0.2); }
         .tab-btn[data-target="mia"].active { border-color: var(--mia-color); background: rgba(100,0,0,0.4); color: #ffcccc; }
         .tab-btn[data-target="min30"].active { border-color: var(--urgent-color); }
-
         .badge {
             display: inline-block; background: #333; color: #fff; border-radius: 3px;
             padding: 1px 5px; font-size: 0.7rem; margin-left: 5px; vertical-align: middle;
@@ -174,7 +164,6 @@
         .card-info .transport { font-size: 0.8rem; border: 1px solid #555; padding: 0 4px; margin-right: 5px; }
         .card-info .date-stamp { font-size: 0.75rem; color: #888; margin-left: 5px; }
 
-        /* Categories Styles */
         .card.group-later { border-left-color: #555; color: #aaa; }
         .card.group-hour3, .card.group-hour2 { border-left-color: var(--calm-color); }
         .card.group-hour3 .name, .card.group-hour2 .name { color: var(--calm-color); }
@@ -193,8 +182,6 @@
         .action-area { display: flex; gap: 5px; align-items: center; }
         .btn-toggle { background: transparent; border: 1px solid var(--safe-color); color: var(--safe-color); padding: 5px 10px; cursor: pointer; }
         .btn-toggle:hover { background: var(--safe-color); color: #000; }
-        
-        /* Edit Button */
         .btn-edit { background: transparent; border: 1px solid var(--warning-color); color: var(--warning-color); padding: 5px 8px; cursor: pointer; font-size: 0.8rem; }
         .btn-edit:hover { background: var(--warning-color); color: #000; }
 
@@ -206,11 +193,21 @@
         #log-panel { border-color: #555; opacity: 0.7; }
         .log-item { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #333; font-size:0.9rem; color: #888; }
 
+        /* Footer & Purge & Export */
         .footer-area { text-align: center; margin-top: 50px; padding: 20px 0; border-top: 1px solid #333; color: #555; font-size: 0.8rem; }
+        
+        .footer-buttons {
+            display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 20px;
+        }
+
         .btn-purge { background: rgba(50,0,0,0.5); border: 1px solid var(--warn-color); color: var(--warn-color); padding: 10px 20px; font-family: 'Share Tech Mono'; font-size: 0.9rem; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
         .btn-purge:hover { background: var(--warn-color); color: #fff; box-shadow: 0 0 15px var(--warn-color); }
+        
+        /* New Export Button Style */
+        .btn-export { background: rgba(0, 50, 0, 0.5); border: 1px solid var(--safe-color); color: var(--safe-color); padding: 10px 20px; font-family: 'Share Tech Mono'; font-size: 0.9rem; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
+        .btn-export:hover { background: var(--safe-color); color: #000; box-shadow: 0 0 15px var(--safe-color); }
 
-        /* Modal Styles (Same as before) */
+        /* Modal Styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
         .modal-box { width: 90%; max-width: 500px; background: #110505; border: 2px solid var(--warn-color); padding: 30px; text-align: center; box-shadow: 0 0 50px rgba(255, 0, 0, 0.2); transform: scale(0.9); transition: 0.3s; }
@@ -237,6 +234,8 @@
             .tabs-container { gap: 2px; }
             .tab-btn { padding: 8px 4px; font-size: 0.8rem; }
             .modal-box { padding: 20px; }
+            .footer-buttons { flex-direction: column; }
+            .btn-purge, .btn-export { width: 100%; }
         }
     </style>
 </head>
@@ -340,7 +339,11 @@
         </section>
 
         <div class="footer-area">
-            <button id="openPurgeModal" class="btn-purge">⚠️ SYSTEM PURGE (清空所有資訊)</button>
+            <div class="footer-buttons">
+                <button id="exportBtn" class="btn-export">📥 DOWNLOAD FLIGHT LOG (匯出報表)</button>
+                
+                <button id="openPurgeModal" class="btn-purge">⚠️ SYSTEM PURGE (清空資訊)</button>
+            </div>
             <div style="margin-top:20px; font-weight:bold; color:#444;">
                 SYSTEM ARCHITECT: DIRTY DOUG
             </div>
@@ -383,13 +386,12 @@
 
         // ⚠️⚠️⚠️ 設定區：請填入您的 Firebase 設定 ⚠️⚠️⚠️
         const firebaseConfig = {
-            apiKey: "AIzaSyD3_n6jvXTW-vXKoHfSBx4hsKpFWbpsozI",
-            authDomain: "eta-board.firebaseapp.com",
-            projectId: "eta-board",
-            storageBucket: "eta-board.firebasestorage.app",
-            messagingSenderId: "215947128482",
-            appId: "1:215947128482:web:da958b4149738b4dfa71fb",
-            measurementId: "G-8Y9GECBPWD"
+            apiKey: "您的_API_KEY",
+            authDomain: "您的專案ID.firebaseapp.com",
+            projectId: "您的專案ID",
+            storageBucket: "您的專案ID.appspot.com",
+            messagingSenderId: "您的SenderID",
+            appId: "您的AppID"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -399,16 +401,14 @@
         let rawData = [];
         let currentTab = 'all';
 
-        // --- Helper: Set Default Date to Today ---
         function setTodayDate() {
             const today = new Date();
-            // 處理時區，確保拿到的是當地 yyyy-mm-dd
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             document.getElementById('etaDate').value = `${year}-${month}-${day}`;
         }
-        setTodayDate(); // Init
+        setTodayDate();
 
         function updateClock() {
             const now = new Date();
@@ -418,7 +418,7 @@
         }
         setInterval(updateClock, 1000);
 
-        // --- Form Logic ---
+        // Form Logic
         const cannotReturnCheck = document.getElementById('cannotReturn');
         const reasonInput = document.getElementById('reason');
         const etaInput = document.getElementById('eta');
@@ -429,39 +429,26 @@
 
         cannotReturnCheck.addEventListener('change', (e) => {
             const isChecked = e.target.checked;
-            etaInput.disabled = isChecked;
-            etaInput.required = !isChecked;
-            etaDateInput.disabled = isChecked;
-            etaDateInput.required = !isChecked;
-
-            if (isChecked) { 
-                etaInput.value = ""; 
-                reasonInput.style.display = 'block'; reasonInput.required = true; reasonInput.focus(); 
-            } else { 
-                reasonInput.style.display = 'none'; reasonInput.required = false; 
-            }
+            etaInput.disabled = isChecked; etaInput.required = !isChecked;
+            etaDateInput.disabled = isChecked; etaDateInput.required = !isChecked;
+            if (isChecked) { etaInput.value = ""; reasonInput.style.display = 'block'; reasonInput.required = true; reasonInput.focus(); } 
+            else { reasonInput.style.display = 'none'; reasonInput.required = false; }
         });
 
-        // 取消編輯按鈕
-        cancelEditBtn.addEventListener('click', () => {
-            resetForm();
-        });
+        cancelEditBtn.addEventListener('click', () => { resetForm(); });
 
         function resetForm() {
             document.getElementById('statusForm').reset();
-            setTodayDate(); // 重設回今日
+            setTodayDate();
             reasonInput.style.display = 'none';
             etaInput.disabled = false; etaInput.required = true;
             etaDateInput.disabled = false; etaDateInput.required = true;
-            
-            // 恢復成「傳送模式」
             submitBtn.innerText = "TRANSMIT (傳送)";
             submitBtn.classList.remove('edit-mode');
             cancelEditBtn.style.display = 'none';
-            editIdInput.value = ""; // 清空 ID
+            editIdInput.value = "";
         }
 
-        // 表單提交 (新增 或 更新)
         document.getElementById('statusForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             submitBtn.disabled = true;
@@ -478,20 +465,15 @@
                     name: document.getElementById('name').value,
                     transport: document.getElementById('transport').value,
                     eta: finalEtaTime,
-                    etaDate: finalEtaDate, // 新增日期欄位
+                    etaDate: finalEtaDate,
                     cannotReturn: cannotReturnCheck.checked,
                     reason: cannotReturnCheck.checked ? reasonInput.value : "",
                     status: "active",
                     timestamp: new Date()
                 };
 
-                if (editingId) {
-                    // 更新模式
-                    await updateDoc(doc(db, "personnel_reports_v2", editingId), payload);
-                } else {
-                    // 新增模式
-                    await addDoc(reportCollection, payload);
-                }
+                if (editingId) { await updateDoc(doc(db, "personnel_reports_v2", editingId), payload); } 
+                else { await addDoc(reportCollection, payload); }
                 
                 resetForm();
                 submitBtn.disabled = false;
@@ -519,34 +501,25 @@
             });
         });
 
-        // --- Active List Logic (Updated for Date & Edit) ---
+        // Active List Render
         function renderActiveList() {
             const container = document.getElementById('active-list-container');
             const now = new Date();
-            
             const groups = { all: [], overdue: [], mia: [], min30: [], hour1: [], hour2: [], hour3: [], later: [] };
 
             rawData.forEach(item => {
                 if (item.status !== 'active') return;
                 let category = 'later';
-
-                if (item.cannotReturn) { 
-                    category = 'mia';
-                } else {
-                    // 修正：結合日期與時間來計算倒數，避免跨日錯誤
-                    // 若舊資料沒有 etaDate，暫時用今日取代，避免 crash
+                if (item.cannotReturn) { category = 'mia'; } else {
                     const datePart = item.etaDate || new Date().toISOString().split('T')[0];
                     let etaObj = new Date(`${datePart}T${item.eta}:00`);
-                    
                     const diffMins = Math.floor((etaObj - now) / 60000);
-                    
                     if (diffMins < 0) category = 'overdue';
                     else if (diffMins <= 30) category = 'min30';
                     else if (diffMins <= 60) category = 'hour1';
                     else if (diffMins <= 120) category = 'hour2';
                     else if (diffMins <= 180) category = 'hour3';
                 }
-                
                 item._category = category;
                 groups.all.push(item);
                 groups[category].push(item);
@@ -564,19 +537,14 @@
             displayItems.forEach(item => {
                 const categoryClass = `group-${item._category}`;
                 const etaDisplay = item.cannotReturn ? "---" : `${item.eta}`;
-                const dateDisplay = item.cannotReturn ? "" : `<span class="date-stamp">${item.etaDate ? item.etaDate.slice(5) : ''}</span>`; // 顯示 MM-DD
+                const dateDisplay = item.cannotReturn ? "" : `<span class="date-stamp">${item.etaDate ? item.etaDate.slice(5) : ''}</span>`;
                 const miaReason = item.cannotReturn ? `<div style="color:var(--text-color); font-size:0.8rem; margin-top:2px;">事由: ${item.reason}</div>` : '';
-                
-                // JSON stringify item to pass to edit function
                 const dataString = encodeURIComponent(JSON.stringify(item));
 
                 html += `<div class="card ${categoryClass}">
                     <div class="card-info">
                         <div><span class="rank">[${item.rank}]</span><span class="name">${item.name}</span></div>
-                        <div style="margin-top:2px;">
-                            <span class="transport">${item.transport.substring(0,1)}</span>
-                            <span class="eta">ETA ${etaDisplay}</span>${dateDisplay}
-                        </div>
+                        <div style="margin-top:2px;"><span class="transport">${item.transport.substring(0,1)}</span><span class="eta">ETA ${etaDisplay}</span>${dateDisplay}</div>
                         ${miaReason}
                     </div>
                     <div class="action-area">
@@ -586,13 +554,9 @@
                 </div>`;
             });
             container.innerHTML = html;
-            
-            // Bind Return Buttons
             container.querySelectorAll('.js-return-btn').forEach(btn => {
                 btn.onclick = async () => { await updateDoc(doc(db, "personnel_reports_v2", btn.dataset.id), { status: 'returned' }); };
             });
-
-            // Bind Edit Buttons (New Logic)
             container.querySelectorAll('.js-edit-btn').forEach(btn => {
                 btn.onclick = () => {
                     const item = JSON.parse(decodeURIComponent(btn.dataset.item));
@@ -601,37 +565,23 @@
             });
         }
 
-        // --- Edit Mode Logic ---
         function fillEditForm(item) {
             document.getElementById('editId').value = item.id;
             document.getElementById('rank').value = item.rank;
             document.getElementById('name').value = item.name;
             document.getElementById('transport').value = item.transport;
-            
             const cannotReturnCheck = document.getElementById('cannotReturn');
             cannotReturnCheck.checked = item.cannotReturn;
-            
-            // 觸發 change 事件以切換 UI 狀態 (隱藏/顯示時間欄位)
             const event = new Event('change');
             cannotReturnCheck.dispatchEvent(event);
-
-            if (item.cannotReturn) {
-                document.getElementById('reason').value = item.reason;
-            } else {
-                document.getElementById('eta').value = item.eta;
-                document.getElementById('etaDate').value = item.etaDate || new Date().toISOString().split('T')[0];
-            }
-
-            // UI 變更為編輯模式
+            if (item.cannotReturn) { document.getElementById('reason').value = item.reason; } 
+            else { document.getElementById('eta').value = item.eta; document.getElementById('etaDate').value = item.etaDate || new Date().toISOString().split('T')[0]; }
             submitBtn.innerText = "UPDATE DATA (更新)";
             submitBtn.classList.add('edit-mode');
             cancelEditBtn.style.display = 'block';
-            
-            // 捲動到頂部
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- Static Lists (Same as before) ---
         function renderStaticLists() {
             const returnedContainer = document.getElementById('returned-list');
             const logContainer = document.getElementById('log-list');
@@ -696,9 +646,9 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        });        
-        
-        // --- Purge Logic ---
+        });
+
+        // Purge Logic
         const modal = document.getElementById('purgeModal');
         const openModalBtn = document.getElementById('openPurgeModal');
         const cancelBtn = document.getElementById('cancelPurge');
@@ -730,7 +680,4 @@
 
     </script>
 </body>
-
 </html>
-
-
