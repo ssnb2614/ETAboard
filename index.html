@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人員動態管制系統 v6.0 // ACE LINK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 核心視覺風格 (CSS) --- */
+        :root {
+            --bg-color: #05070a;
+            --grid-color: rgba(0, 255, 255, 0.05);
+            --primary-color: #00f0ff; /* HUD Cyan */
+            --warn-color: #ff3333;    /* Critical Red */
+            --mia-color: #b30000;     /* Dark Red for MIA */
+            --urgent-color: #ff9d00;  /* Orange */
+            --warning-color: #ffcc00; /* Yellow */
+            --safe-color: #00ff41;    /* Green */
+            --calm-color: #0088ff;    /* Blue */
+            --text-color: #e0f6ff;
+            --glass-bg: rgba(12, 20, 30, 0.95);
+            --panel-border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+            overflow-x: hidden;
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none; z-index: 999;
+        }
+
+        .container {
+            width: 95%; max-width: 900px; padding-bottom: 50px;
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 20px; padding-bottom: 10px;
+        }
+        h1 { margin: 0; font-size: 1.4rem; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px; }
+        .version { font-size: 0.8rem; background: var(--primary-color); color: #000; padding: 1px 5px; margin-left: 10px; }
+
+        .panel {
+            background: var(--glass-bg); border: var(--panel-border);
+            padding: 15px; margin-bottom: 25px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.05); position: relative;
+        }
+        .panel-title {
+            color: var(--urgent-color); text-transform: uppercase; font-size: 1rem;
+            border-bottom: 1px dashed var(--urgent-color); padding-bottom: 5px; margin-bottom: 15px;
+        }
+
+        .clock-display {
+            text-align: center; font-size: 2.5rem; color: var(--text-color);
+            text-shadow: 0 0 15px var(--primary-color); margin: 20px 0;
+            letter-spacing: 5px; border: 1px solid var(--primary-color);
+            background: rgba(0, 20, 30, 0.6); padding: 10px; position: relative;
+        }
+        .clock-label {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-color); padding: 0 10px; font-size: 0.8rem; color: var(--urgent-color);
+        }
+
+        /* Form & Inputs */
+        .form-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; grid-column: span 2; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; grid-column: span 2; } /* New layout for Date/Time */
+        .input-group { margin-bottom: 10px; }
+        .full-width { grid-column: span 2; }
+        
+        label { display: block; font-size: 0.8rem; opacity: 0.7; margin-bottom: 4px; }
+        input, select {
+            width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid #444;
+            color: var(--primary-color); padding: 8px; font-family: inherit; font-size: 1rem;
+            outline: none; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--primary-color); box-shadow: 0 0 8px var(--primary-color); }
+        input:disabled { opacity: 0.3; cursor: not-allowed; border-color: #333; }
+
+        /* Date Input Specifics */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) sepia(1) saturate(5) hue-rotate(175deg); /* Cyan tint */
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex; align-items: center; margin-top: 5px; cursor: pointer;
+            border: 1px solid #444; padding: 5px; background: rgba(50, 0, 0, 0.2);
+        }
+        .checkbox-group input { width: auto; margin-right: 10px; }
+        .checkbox-group span { color: var(--warn-color); }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        
+        button.submit-btn {
+            flex-grow: 1; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary-color);
+            color: var(--primary-color); padding: 12px; font-size: 1.1rem; cursor: pointer;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        button.submit-btn:hover { background: var(--primary-color); color: #000; box-shadow: 0 0 15px var(--primary-color); }
+        
+        /* Edit Mode Styles */
+        button.submit-btn.edit-mode {
+            border-color: var(--warning-color); color: var(--warning-color); background: rgba(255, 204, 0, 0.1);
+        }
+        button.submit-btn.edit-mode:hover {
+            background: var(--warning-color); color: #000; box-shadow: 0 0 15px var(--warning-color);
+        }
+
+        button.cancel-btn {
+            width: 30%; background: rgba(50, 50, 50, 0.5); border: 1px solid #666;
+            color: #aaa; padding: 12px; font-size: 1rem; cursor: pointer;
+            text-transform: uppercase; transition: 0.2s; display: none; /* Hidden by default */
+        }
+        button.cancel-btn:hover { background: #666; color: #fff; }
+
+        /* Tabs */
+        .tabs-container {
+            display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: rgba(0,0,0,0.5); border: 1px solid #444; color: #888;
+            padding: 8px 12px; cursor: pointer; font-family: inherit; font-size: 0.9rem;
+            flex-grow: 1; text-align: center; transition: 0.2s; position: relative;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.1); }
+        .tab-btn.active {
+            background: rgba(0, 240, 255, 0.1); border-color: var(--primary-color);
+            color: var(--text-color); font-weight: bold; box-shadow: 0 0 10px rgba(0,240,255,0.1);
+        }
+        .tab-btn[data-target="overdue"].active { border-color: var(--warn-color); background: rgba(255,0,0,0.2); }
+        .tab-btn[data-target="mia"].active { border-color: var(--mia-color); background: rgba(100,0,0,0.4); color: #ffcccc; }
+        .tab-btn[data-target="min30"].active { border-color: var(--urgent-color); }
+
+        .badge {
+            display: inline-block; background: #333; color: #fff; border-radius: 3px;
+            padding: 1px 5px; font-size: 0.7rem; margin-left: 5px; vertical-align: middle;
+        }
+        .tab-btn.active .badge { background: var(--primary-color); color: #000; }
+        .tab-btn[data-target="overdue"] .badge { background: var(--warn-color); }
+        .tab-btn[data-target="mia"] .badge { background: var(--mia-color); }
+
+        /* Cards */
+        .card {
+            display: grid; grid-template-columns: 1fr auto; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px;
+            margin-bottom: 5px; background: rgba(0,0,0,0.2); border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .card-info .rank { font-size: 0.85rem; margin-right: 5px; opacity: 0.8; }
+        .card-info .name { font-weight: bold; font-size: 1.1rem; margin-right: 10px; }
+        .card-info .transport { font-size: 0.8rem; border: 1px solid #555; padding: 0 4px; margin-right: 5px; }
+        .card-info .date-stamp { font-size: 0.75rem; color: #888; margin-left: 5px; }
+
+        /* Categories Styles */
+        .card.group-later { border-left-color: #555; color: #aaa; }
+        .card.group-hour3, .card.group-hour2 { border-left-color: var(--calm-color); }
+        .card.group-hour3 .name, .card.group-hour2 .name { color: var(--calm-color); }
+        .card.group-hour1 { border-left-color: var(--warning-color); background: rgba(255, 204, 0, 0.05); }
+        .card.group-hour1 .name { color: var(--warning-color); }
+        .card.group-min30 { border-left-color: var(--urgent-color); background: rgba(255, 157, 0, 0.1); }
+        .card.group-min30 .name { color: var(--urgent-color); }
+        .card.group-mia { border-left-color: var(--warn-color); background: rgba(80, 0, 0, 0.25); }
+        .card.group-mia .name { color: var(--warn-color); }
+        .card.group-mia .eta { text-decoration: line-through; opacity: 0.5; }
+        .card.group-overdue { border: 1px solid var(--warn-color); background: rgba(255, 0, 0, 0.15); animation: panic-flash 1s infinite alternate; }
+        .card.group-overdue .name { color: var(--warn-color); text-shadow: 0 0 5px red; }
+        
+        @keyframes panic-flash { 0% { box-shadow: 0 0 5px rgba(255,0,0,0.2); border-color: rgba(255,0,0,0.5); } 100% { box-shadow: 0 0 20px rgba(255,0,0,0.8); border-color: var(--warn-color); background: rgba(255,0,0,0.3); } }
+
+        .action-area { display: flex; gap: 5px; align-items: center; }
+        .btn-toggle { background: transparent; border: 1px solid var(--safe-color); color: var(--safe-color); padding: 5px 10px; cursor: pointer; }
+        .btn-toggle:hover { background: var(--safe-color); color: #000; }
+        
+        /* Edit Button */
+        .btn-edit { background: transparent; border: 1px solid var(--warning-color); color: var(--warning-color); padding: 5px 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-edit:hover { background: var(--warning-color); color: #000; }
+
+        #returned-panel { border-color: var(--safe-color); }
+        #returned-panel .panel-title { color: var(--safe-color); border-color: var(--safe-color); }
+        .btn-cancel { border-color: var(--urgent-color); color: var(--urgent-color); background: transparent; padding:4px 8px; cursor: pointer; }
+        .btn-confirm { border-color: var(--primary-color); color: var(--primary-color); background: transparent; padding:4px 8px; cursor: pointer; }
+        
+        #log-panel { border-color: #555; opacity: 0.7; }
+        .log-item { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #333; font-size:0.9rem; color: #888; }
+
+        .footer-area { text-align: center; margin-top: 50px; padding: 20px 0; border-top: 1px solid #333; color: #555; font-size: 0.8rem; }
+        .btn-purge { background: rgba(50,0,0,0.5); border: 1px solid var(--warn-color); color: var(--warn-color); padding: 10px 20px; font-family: 'Share Tech Mono'; font-size: 0.9rem; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
+        .btn-purge:hover { background: var(--warn-color); color: #fff; box-shadow: 0 0 15px var(--warn-color); }
+
+        /* Modal Styles (Same as before) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-box { width: 90%; max-width: 500px; background: #110505; border: 2px solid var(--warn-color); padding: 30px; text-align: center; box-shadow: 0 0 50px rgba(255, 0, 0, 0.2); transform: scale(0.9); transition: 0.3s; }
+        .modal-overlay.open .modal-box { transform: scale(1); }
+        .warning-title { color: var(--warn-color); font-size: 1.5rem; margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid var(--warn-color); padding-bottom: 10px; }
+        .warning-text { color: #fff; font-size: 1rem; line-height: 1.5; margin-bottom: 30px; }
+        .safety-locks { display: flex; justify-content: space-around; margin-bottom: 30px; background: rgba(255,0,0,0.1); padding: 15px; border-radius: 5px; }
+        .switch-container { display: flex; flex-direction: column; align-items: center; }
+        .switch-label { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
+        .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border: 1px solid #555; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 3px; bottom: 3px; background-color: #888; transition: .4s; }
+        input:checked + .slider { background-color: var(--warn-color); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: #fff; }
+        .modal-actions { display: flex; gap: 20px; justify-content: center; }
+        .btn-modal-cancel { padding: 12px 30px; border: 1px solid #888; background: transparent; color: #888; font-family: inherit; cursor: pointer; }
+        .btn-modal-confirm { padding: 12px 30px; border: 1px solid var(--warn-color); background: #300; color: #888; font-family: inherit; cursor: not-allowed; transition: 0.3s; }
+        .btn-modal-confirm.activated { background: var(--warn-color); color: #fff; cursor: pointer; box-shadow: 0 0 20px var(--warn-color); font-weight: bold; }
+
+        @media (max-width: 600px) {
+            .form-grid, .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            .tabs-container { gap: 2px; }
+            .tab-btn { padding: 8px 4px; font-size: 0.8rem; }
+            .modal-box { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <div class="container">
+        <header>
+            <h1>人員動態管制系統 <span class="version">v2.0</span></h1>
+            <div style="text-align:right; font-size:0.8rem; opacity:0.7;">Administrative Squad<br>INSECURE LINK</div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-title">>> Input / Correction (動態回報與修正)</div>
+            <form id="statusForm">
+                <input type="hidden" id="editId">
+
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>RANK (職稱)</label>
+                        <select id="rank" required>
+                            <option value="警員">警員</option>
+                            <option value="小隊長">小隊長</option>
+                            <option value="分隊長">分隊長</option>
+                            <option value="副中隊長">副中隊長</option>
+                            <option value="中隊長">中隊長</option>
+                            <option value="警務員">警務員</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>CALLSIGN (姓名)</label>
+                        <input type="text" id="name" placeholder="Name" required>
+                    </div>
+
+                    <div class="form-row-3">
+                        <div class="input-group">
+                            <label>VECTOR (方式)</label>
+                            <select id="transport" required>
+                                <option value="步行">INFANTRY (步行)</option>
+                                <option value="機車">BIKE (機車)</option>
+                                <option value="自駕">VEHICLE (自駕)</option>
+                                <option value="大眾交通">TRANSIT (大眾)</option>
+                                <option value="混合">HYBRID (混合)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>DATE (預計日期)</label>
+                            <input type="date" id="etaDate" required>
+                        </div>
+                        <div class="input-group">
+                            <label>TIME (預計時間)</label>
+                            <input type="time" id="eta" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="cannotReturn">
+                            <span>UNABLE TO RETURN (無法返回)</span>
+                        </label>
+                        <input type="text" id="reason" placeholder="輸入事由 (Reason)..." style="display:none; margin-top:5px; border-color:var(--warn-color);">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" id="submitBtn" class="submit-btn">TRANSMIT (傳送)</button>
+                    <button type="button" id="cancelEditBtn" class="cancel-btn">CANCEL EDIT</button>
+                </div>
+            </form>
+        </section>
+
+        <div class="clock-display">
+            <div class="clock-label">CURRENT TIME (UTC+8)</div>
+            <span id="systemClock">00:00:00</span>
+        </div>
+
+        <section class="panel">
+            <div class="panel-title">>> Live Tracking (動態監控)</div>
+            <div class="tabs-container" id="tab-bar">
+                <button class="tab-btn active" data-target="all">全部 <span class="badge" id="count-all">0</span></button>
+                <button class="tab-btn" data-target="overdue">超時 <span class="badge" id="count-overdue">0</span></button>
+                <button class="tab-btn" data-target="mia">無法返回 <span class="badge" id="count-mia">0</span></button>
+                <button class="tab-btn" data-target="min30">< 30m <span class="badge" id="count-min30">0</span></button>
+                <button class="tab-btn" data-target="hour1">< 1h <span class="badge" id="count-hour1">0</span></button>
+                <button class="tab-btn" data-target="hour2">< 2h <span class="badge" id="count-hour2">0</span></button>
+                <button class="tab-btn" data-target="hour3">< 3h <span class="badge" id="count-hour3">0</span></button>
+                <button class="tab-btn" data-target="later">> 3h <span class="badge" id="count-later">0</span></button>
+            </div>
+            <div id="active-list-container"></div>
+        </section>
+
+        <section class="panel" id="returned-panel">
+            <div class="panel-title">>> RTB / Debriefing (已招返)</div>
+            <div id="returned-list"></div>
+        </section>
+
+        <section class="panel" id="log-panel">
+            <div class="panel-title">>> Mission Log (歷史紀錄)</div>
+            <div id="log-list"></div>
+        </section>
+
+        <div class="footer-area">
+            <button id="openPurgeModal" class="btn-purge">⚠️ SYSTEM PURGE (清空所有資訊)</button>
+            <div style="margin-top:20px; font-weight:bold; color:#444;">
+                SYSTEM ARCHITECT: DIRTY DOUG
+            </div>
+        </div>
+    </div>
+
+    <div id="purgeModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="warning-title">WARNING: DATA FLUSH</div>
+            <div class="warning-text">
+                注意！你正在清空本頁面所有資訊，請確認你符合作業資格與操作目的。<br>
+                此操作無法復原。
+            </div>
+            <div class="safety-locks">
+                <div class="switch-container">
+                    <span class="switch-label">SAFETY A</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="safetySwitch1">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="switch-container">
+                    <span class="switch-label">SAFETY B</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="safetySwitch2">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="cancelPurge" class="btn-modal-cancel">CANCEL</button>
+                <button id="confirmPurge" class="btn-modal-confirm" disabled>CONFIRM DELETE</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, limit, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ⚠️⚠️⚠️ 設定區：請填入您的 Firebase 設定 ⚠️⚠️⚠️
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3_n6jvXTW-vXKoHfSBx4hsKpFWbpsozI",
+            authDomain: "eta-board.firebaseapp.com",
+            projectId: "eta-board",
+            storageBucket: "eta-board.firebasestorage.app",
+            messagingSenderId: "215947128482",
+            appId: "1:215947128482:web:da958b4149738b4dfa71fb",
+            measurementId: "G-8Y9GECBPWD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const reportCollection = collection(db, "personnel_reports_v2");
+
+        let rawData = [];
+        let currentTab = 'all';
+
+        // --- Helper: Set Default Date to Today ---
+        function setTodayDate() {
+            const today = new Date();
+            // 處理時區，確保拿到的是當地 yyyy-mm-dd
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('etaDate').value = `${year}-${month}-${day}`;
+        }
+        setTodayDate(); // Init
+
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-GB', { hour12: false });
+            document.getElementById('systemClock').innerText = timeString;
+            renderActiveList(); 
+        }
+        setInterval(updateClock, 1000);
+
+        // --- Form Logic ---
+        const cannotReturnCheck = document.getElementById('cannotReturn');
+        const reasonInput = document.getElementById('reason');
+        const etaInput = document.getElementById('eta');
+        const etaDateInput = document.getElementById('etaDate');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const editIdInput = document.getElementById('editId');
+
+        cannotReturnCheck.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            etaInput.disabled = isChecked;
+            etaInput.required = !isChecked;
+            etaDateInput.disabled = isChecked;
+            etaDateInput.required = !isChecked;
+
+            if (isChecked) { 
+                etaInput.value = ""; 
+                reasonInput.style.display = 'block'; reasonInput.required = true; reasonInput.focus(); 
+            } else { 
+                reasonInput.style.display = 'none'; reasonInput.required = false; 
+            }
+        });
+
+        // 取消編輯按鈕
+        cancelEditBtn.addEventListener('click', () => {
+            resetForm();
+        });
+
+        function resetForm() {
+            document.getElementById('statusForm').reset();
+            setTodayDate(); // 重設回今日
+            reasonInput.style.display = 'none';
+            etaInput.disabled = false; etaInput.required = true;
+            etaDateInput.disabled = false; etaDateInput.required = true;
+            
+            // 恢復成「傳送模式」
+            submitBtn.innerText = "TRANSMIT (傳送)";
+            submitBtn.classList.remove('edit-mode');
+            cancelEditBtn.style.display = 'none';
+            editIdInput.value = ""; // 清空 ID
+        }
+
+        // 表單提交 (新增 或 更新)
+        document.getElementById('statusForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "PROCESSING...";
+
+            try {
+                const finalEtaTime = cannotReturnCheck.checked ? "N/A" : etaInput.value;
+                const finalEtaDate = cannotReturnCheck.checked ? "N/A" : etaDateInput.value;
+                const editingId = editIdInput.value;
+
+                const payload = {
+                    rank: document.getElementById('rank').value,
+                    name: document.getElementById('name').value,
+                    transport: document.getElementById('transport').value,
+                    eta: finalEtaTime,
+                    etaDate: finalEtaDate, // 新增日期欄位
+                    cannotReturn: cannotReturnCheck.checked,
+                    reason: cannotReturnCheck.checked ? reasonInput.value : "",
+                    status: "active",
+                    timestamp: new Date()
+                };
+
+                if (editingId) {
+                    // 更新模式
+                    await updateDoc(doc(db, "personnel_reports_v2", editingId), payload);
+                } else {
+                    // 新增模式
+                    await addDoc(reportCollection, payload);
+                }
+                
+                resetForm();
+                submitBtn.disabled = false;
+            } catch (err) { 
+                alert("Error: " + err.message); 
+                submitBtn.innerText = "FAILED";
+                setTimeout(() => { submitBtn.innerText = originalText; submitBtn.disabled = false; }, 2000);
+            }
+        });
+
+        const q = query(reportCollection, orderBy("timestamp", "desc"), limit(100));
+        onSnapshot(q, (snapshot) => {
+            rawData = [];
+            snapshot.forEach(doc => { rawData.push({ id: doc.id, ...doc.data() }); });
+            renderActiveList();
+            renderStaticLists();
+        });
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.dataset.target;
+                renderActiveList();
+            });
+        });
+
+        // --- Active List Logic (Updated for Date & Edit) ---
+        function renderActiveList() {
+            const container = document.getElementById('active-list-container');
+            const now = new Date();
+            
+            const groups = { all: [], overdue: [], mia: [], min30: [], hour1: [], hour2: [], hour3: [], later: [] };
+
+            rawData.forEach(item => {
+                if (item.status !== 'active') return;
+                let category = 'later';
+
+                if (item.cannotReturn) { 
+                    category = 'mia';
+                } else {
+                    // 修正：結合日期與時間來計算倒數，避免跨日錯誤
+                    // 若舊資料沒有 etaDate，暫時用今日取代，避免 crash
+                    const datePart = item.etaDate || new Date().toISOString().split('T')[0];
+                    let etaObj = new Date(`${datePart}T${item.eta}:00`);
+                    
+                    const diffMins = Math.floor((etaObj - now) / 60000);
+                    
+                    if (diffMins < 0) category = 'overdue';
+                    else if (diffMins <= 30) category = 'min30';
+                    else if (diffMins <= 60) category = 'hour1';
+                    else if (diffMins <= 120) category = 'hour2';
+                    else if (diffMins <= 180) category = 'hour3';
+                }
+                
+                item._category = category;
+                groups.all.push(item);
+                groups[category].push(item);
+            });
+
+            for (const [key, arr] of Object.entries(groups)) {
+                const badge = document.getElementById(`count-${key}`);
+                if (badge) badge.innerText = arr.length;
+            }
+
+            const displayItems = groups[currentTab];
+            if (displayItems.length === 0) { container.innerHTML = '<div style="text-align:center; opacity:0.5; padding:20px;">NO DATA</div>'; return; }
+
+            let html = '';
+            displayItems.forEach(item => {
+                const categoryClass = `group-${item._category}`;
+                const etaDisplay = item.cannotReturn ? "---" : `${item.eta}`;
+                const dateDisplay = item.cannotReturn ? "" : `<span class="date-stamp">${item.etaDate ? item.etaDate.slice(5) : ''}</span>`; // 顯示 MM-DD
+                const miaReason = item.cannotReturn ? `<div style="color:var(--text-color); font-size:0.8rem; margin-top:2px;">事由: ${item.reason}</div>` : '';
+                
+                // JSON stringify item to pass to edit function
+                const dataString = encodeURIComponent(JSON.stringify(item));
+
+                html += `<div class="card ${categoryClass}">
+                    <div class="card-info">
+                        <div><span class="rank">[${item.rank}]</span><span class="name">${item.name}</span></div>
+                        <div style="margin-top:2px;">
+                            <span class="transport">${item.transport.substring(0,1)}</span>
+                            <span class="eta">ETA ${etaDisplay}</span>${dateDisplay}
+                        </div>
+                        ${miaReason}
+                    </div>
+                    <div class="action-area">
+                        <button class="btn-edit js-edit-btn" data-item="${dataString}">EDIT</button>
+                        <button class="btn-toggle js-return-btn" data-id="${item.id}">RETURN</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            
+            // Bind Return Buttons
+            container.querySelectorAll('.js-return-btn').forEach(btn => {
+                btn.onclick = async () => { await updateDoc(doc(db, "personnel_reports_v2", btn.dataset.id), { status: 'returned' }); };
+            });
+
+            // Bind Edit Buttons (New Logic)
+            container.querySelectorAll('.js-edit-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const item = JSON.parse(decodeURIComponent(btn.dataset.item));
+                    fillEditForm(item);
+                };
+            });
+        }
+
+        // --- Edit Mode Logic ---
+        function fillEditForm(item) {
+            document.getElementById('editId').value = item.id;
+            document.getElementById('rank').value = item.rank;
+            document.getElementById('name').value = item.name;
+            document.getElementById('transport').value = item.transport;
+            
+            const cannotReturnCheck = document.getElementById('cannotReturn');
+            cannotReturnCheck.checked = item.cannotReturn;
+            
+            // 觸發 change 事件以切換 UI 狀態 (隱藏/顯示時間欄位)
+            const event = new Event('change');
+            cannotReturnCheck.dispatchEvent(event);
+
+            if (item.cannotReturn) {
+                document.getElementById('reason').value = item.reason;
+            } else {
+                document.getElementById('eta').value = item.eta;
+                document.getElementById('etaDate').value = item.etaDate || new Date().toISOString().split('T')[0];
+            }
+
+            // UI 變更為編輯模式
+            submitBtn.innerText = "UPDATE DATA (更新)";
+            submitBtn.classList.add('edit-mode');
+            cancelEditBtn.style.display = 'block';
+            
+            // 捲動到頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Static Lists (Same as before) ---
+        function renderStaticLists() {
+            const returnedContainer = document.getElementById('returned-list');
+            const logContainer = document.getElementById('log-list');
+            let returnedHTML = '', logHTML = '';
+
+            rawData.forEach(item => {
+                if (item.status === 'returned') {
+                    returnedHTML += `<div class="card"><div class="card-info"><span style="color:var(--safe-color)">[RTB]</span><span class="rank">${item.rank}</span><span class="name">${item.name}</span></div><div class="action-area"><button class="btn-cancel js-undo-btn" data-id="${item.id}">X</button><button class="btn-confirm js-duty-btn" data-id="${item.id}">OK</button></div></div>`;
+                } else if (item.status === 'on_duty') {
+                    logHTML += `<div class="log-item"><span>[DONE] ${item.rank} ${item.name}</span><span>${item.cannotReturn ? '無法返回' : '歸隊'}</span></div>`;
+                }
+            });
+            returnedContainer.innerHTML = returnedHTML || '<div style="text-align:center; opacity:0.5; padding:20px;">EMPTY</div>';
+            logContainer.innerHTML = logHTML || '<div style="text-align:center; opacity:0.5; padding:10px;">EMPTY</div>';
+
+            returnedContainer.querySelectorAll('.js-undo-btn').forEach(btn => {
+                btn.onclick = async () => { await updateDoc(doc(db, "personnel_reports_v2", btn.dataset.id), { status: 'active' }); };
+            });
+            returnedContainer.querySelectorAll('.js-duty-btn').forEach(btn => {
+                btn.onclick = async () => { await updateDoc(doc(db, "personnel_reports_v2", btn.dataset.id), { status: 'on_duty' }); };
+            });
+        }
+
+        // --- Purge Logic ---
+        const modal = document.getElementById('purgeModal');
+        const openModalBtn = document.getElementById('openPurgeModal');
+        const cancelBtn = document.getElementById('cancelPurge');
+        const confirmBtn = document.getElementById('confirmPurge');
+        const switch1 = document.getElementById('safetySwitch1');
+        const switch2 = document.getElementById('safetySwitch2');
+
+        openModalBtn.addEventListener('click', () => { modal.classList.add('open'); switch1.checked = false; switch2.checked = false; checkSwitches(); });
+        cancelBtn.addEventListener('click', () => { modal.classList.remove('open'); });
+
+        function checkSwitches() {
+            if (switch1.checked && switch2.checked) { confirmBtn.disabled = false; confirmBtn.classList.add('activated'); confirmBtn.innerText = "CONFIRM DELETE"; } 
+            else { confirmBtn.disabled = true; confirmBtn.classList.remove('activated'); confirmBtn.innerText = "AWAITING AUTH..."; }
+        }
+        switch1.addEventListener('change', checkSwitches);
+        switch2.addEventListener('change', checkSwitches);
+
+        confirmBtn.addEventListener('click', async () => {
+            confirmBtn.innerText = "PURGING...";
+            try {
+                const querySnapshot = await getDocs(reportCollection);
+                const batch = writeBatch(db);
+                querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
+                await batch.commit();
+                modal.classList.remove('open');
+                alert("SYSTEM PURGE COMPLETE.");
+            } catch (err) { alert("PURGE FAILED: " + err.message); confirmBtn.innerText = "ERROR"; }
+        });
+
+    </script>
+</body>
+</html>
